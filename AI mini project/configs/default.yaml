@@ -1,0 +1,71 @@
+# Configuration for DNS Exfiltration Detection with Cloud AI
+
+app:
+  project_name: "DNS Exfiltration Detection with Cloud AI"
+  version: "1.0.0"
+
+rules:
+  # Heuristic threshold parameters
+  entropy_threshold: 3.85               # Shannon entropy threshold for subdomain
+  subdomain_length_threshold: 28        # Characters in subdomain
+  query_length_threshold: 48            # Total characters in query
+  label_count_threshold: 4              # Number of domain labels (dots + 1)
+  hex_ratio_threshold: 0.75             # Ratio of hexadecimal characters in subdomain
+  base64_ratio_threshold: 0.85          # Ratio of alphanumeric+padding chars
+  vowel_consonant_ratio_min: 0.10       # Unusually low vowel ratio indicative of encoded payloads
+  digit_ratio_threshold: 0.40           # Abnormally high digit ratio
+  
+  # Composite heuristic score weights (sum = 1.0)
+  weights:
+    entropy: 0.30
+    subdomain_length: 0.25
+    query_length: 0.15
+    character_distribution: 0.15
+    label_count: 0.15
+
+  # Classification thresholds based on heuristic composite score [0.0 - 1.0]
+  score_threshold_suspicious: 0.40
+  score_threshold_exfiltration: 0.75
+
+hybrid_router:
+  # Routing policy:
+  # "ambiguous_only": Only send cases with score in [low_threshold, high_threshold] to LLM.
+  # "ambiguous_and_suspicious": Send any case with score >= low_threshold to LLM for expert verification.
+  routing_policy: "ambiguous_only"
+  low_threshold: 0.30                   # Below this: local clear-benign (no LLM call)
+  high_threshold: 0.80                  # Above this: local clear-exfiltration (no LLM call)
+  max_api_calls_per_run: 50             # Hard safety budget to prevent unexpected cost spikes
+
+privacy:
+  pseudonymize_ips: true                # Hash/pseudonymize client IPs
+  suppress_raw_queries: true            # Only send derived features and sanitized labels
+  strip_internal_hostnames: true
+
+llm:
+  default_provider: "mock"              # "mock", "gemini", or "openai"
+  default_model_gemini: "gemini-1.5-flash"
+  default_model_openai: "gpt-4o-mini"
+  temperature: 0.0                      # Deterministic / lowest variance
+  max_retries: 2
+  timeout_seconds: 15
+  cache_enabled: true
+
+# Estimated cost per 1K tokens ($ USD) for research tracking
+pricing:
+  gemini-1.5-flash:
+    prompt_per_1k: 0.000075
+    completion_per_1k: 0.00030
+  gemini-1.5-pro:
+    prompt_per_1k: 0.00125
+    completion_per_1k: 0.00500
+  gpt-4o-mini:
+    prompt_per_1k: 0.00015
+    completion_per_1k: 0.00060
+  mock:
+    prompt_per_1k: 0.0
+    completion_per_1k: 0.0
+
+dataset:
+  default_synthetic_path: "data/synthetic_demo.csv"
+  test_split_ratio: 0.30
+  random_seed: 42

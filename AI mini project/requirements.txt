@@ -1,0 +1,22 @@
+# Core Data Handling
+pandas>=2.2.0
+numpy>=1.26.0
+scikit-learn>=1.4.0
+scipy>=1.12.0
+
+# UI & Visualization
+streamlit>=1.35.0
+plotly>=5.20.0
+
+# Schema Validation & Configuration
+pydantic>=2.7.0
+PyYAML>=6.0.1
+python-dotenv>=1.0.1
+
+# Cloud AI & Networking
+requests>=2.31.0
+google-generativeai>=0.8.0
+openai>=1.30.0
+
+# Testing & Quality
+pytest>=8.0.0
